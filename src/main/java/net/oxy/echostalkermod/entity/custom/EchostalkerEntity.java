@@ -6,17 +6,25 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.GeoAnimatable;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animatable.instance.SingletonAnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.object.PlayState;
 
 public class EchostalkerEntity extends Monster implements GeoEntity {
 
-    protected EchostalkerEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
+    private AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
+
+    public EchostalkerEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
@@ -104,6 +112,16 @@ public class EchostalkerEntity extends Monster implements GeoEntity {
         pCompound.putInt("echostalkerStatus", this.getEchostalkerRawStatus());
     }
 
+    public static AttributeSupplier setAttributes () {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 512D)
+                .add(Attributes.ATTACK_DAMAGE, 6.0f)
+                .add(Attributes.ATTACK_SPEED, 1.0f)
+                .add(Attributes.ATTACK_KNOCKBACK, 0.2f)
+                .add(Attributes.MOVEMENT_SPEED, 0.4f)
+                .build();
+    }
+
     // Condition checks
     private boolean isMoving() {
         return !(this.xOld == this.getX() && this.yOld == this.getY() && this.zOld == this.getZ());
@@ -166,7 +184,7 @@ public class EchostalkerEntity extends Monster implements GeoEntity {
     // Goal & behaviors
     @Override
     protected void registerGoals() {
-        super.registerGoals();
+        this.goalSelector.addGoal(1, new FloatGoal(this));
     }
 
     @Override
@@ -176,7 +194,7 @@ public class EchostalkerEntity extends Monster implements GeoEntity {
 
     @Override
     protected boolean canRide(Entity pVehicle) {
-        return super.canRide(pVehicle);
+        return false;
     }
 
     @Override
@@ -189,10 +207,22 @@ public class EchostalkerEntity extends Monster implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
 
+        controllerRegistrar.add(new AnimationController<GeoAnimatable>(this, "controller", 4,
+                this::predicate));
+
+    }
+
+    private PlayState predicate(AnimationState<GeoAnimatable> geoAnimatableAnimationState) {
+
+        geoAnimatableAnimationState.getController().setAnimation(
+                RawAnimation.begin().then("animation.echostalker.idle", Animation.LoopType.LOOP)
+        );
+        return PlayState.CONTINUE;
+
     }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return null;
+        return cache;
     }
 }
