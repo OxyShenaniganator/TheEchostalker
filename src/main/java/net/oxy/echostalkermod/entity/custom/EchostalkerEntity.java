@@ -13,6 +13,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.oxy.echostalkermod.entity.goal.EchostalkerObservingGoal;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.GeoAnimatable;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -127,7 +128,7 @@ public class EchostalkerEntity extends Monster implements GeoEntity {
         return !(this.xOld == this.getX() && this.yOld == this.getY() && this.zOld == this.getZ());
     }
 
-    private boolean isBeingStaredAt(Player player, Double distance) {
+    public boolean isBeingStaredAt(Player player, Double distance) {
 
         if (!(player == null || player.isCreative() || player.isSpectator() || player.isInvisible())) {
             Vec3 playerEyePos = player.getEyePosition();
@@ -185,6 +186,7 @@ public class EchostalkerEntity extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(2, new EchostalkerObservingGoal(this, 100, 5));
     }
 
     @Override
